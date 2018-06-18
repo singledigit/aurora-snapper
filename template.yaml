@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Automated process for keeping snapshots on aurora
+
+Globals:
+  Function:
+    Runtime: nodejs8.10
+    MemorySize: 128
+    Timeout: 60
+
+Resources:
+  snapper:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: snapper/index.handler
+      Events:
+        CreateAuroraSnapshot:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)

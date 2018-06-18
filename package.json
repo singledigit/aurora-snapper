@@ -1,0 +1,12 @@
+{
+  "name": "aurorasnapper",
+  "version": "1.0.0",
+  "description": "Schedule Manual Snapshots of AWS Aurora",
+  "main": "index.js",
+  "keywords": [
+    "AWS",
+    "Aurora"
+  ],
+  "author": "Eric Johnson",
+  "license": "ISC"
+}
