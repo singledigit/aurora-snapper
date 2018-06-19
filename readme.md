@@ -12,8 +12,11 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 2. Change to the downloaded directory and install dependencies using `npm install`
 3. Create a unique bucket to upload the code to. `aws s3api create-bucket --bucket <your unique bucket name>`
 
+## Update Variables
+*to be updated*
+
 ## Deployment
 Code deployment consists of two commands. The first command will package up your code and copy it to the bucket you created. The second will deploy your new lambda.
 
 1. **Package:** `aws cloudformation package --template-file ./template.yaml --s3-bucket <your unique bucket name>`
-2. **Deploy:** `aws cloudformation deploy --template-file ./out.yaml --stack-name AuroraSnapper --capabilities CAPABILITY_IAM`
+2. **Deploy:** `aws cloudformation deploy --template-file ./out.yaml --stack-name AuroraSnapper --capabilities CAPABILITY_IAM --parameter-overrides ClusterId=<Your DB Cluster Name>`
