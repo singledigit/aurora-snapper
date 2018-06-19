@@ -1,13 +1,14 @@
 const AWS = require('aws-sdk');
 const rds = new AWS.RDS();
+const sns = new AWS.SNS();
 
-const cluster = 'aurora-db-cluster'
-const ttl = 30;
-const ttlMetric = 'minute'
+const cluster = process.env.CLUSTER_ID
+const ttl = process.env.TIME_TO_LIVE;
+const ttlMetric = process.env.TIME_TO_LIVE_METRIC
 const tags = [{ Key: 'type', Value: 'snapper' }]
 const prefix = `snapper-${ttl}-${ttlMetric}-${cluster}`
 
-exports.handler = async(event, context, callback) => {
+exports.handler = async (event, context, callback) => {
 
     // create new snapshot
     var newSnapshot = await exports.createClusterSnapshot().catch((err) => { exports.error(callback, err) });
@@ -21,12 +22,33 @@ exports.handler = async(event, context, callback) => {
     // delete snapshots according to criteria
     let deletedSnaps = await Promise.all(pruneRequests).catch((err) => { exports.error(callback, err) });
 
-    // return
-    callback(null, {"New-Snapshot":newSnapshot, "DeletedSnapshots":deletedSnaps});
+    // success
+    exports.success(callback, { "New-Snapshot": newSnapshot, "DeletedSnapshots": deletedSnaps });
 };
 
-exports.error = (callback, err) => {
+exports.success = async (callback, data) => {
+    let params = {
+        Subject: `Snapshot and Pruning Complete for ${prefix}`,
+        Message: data
+    }
+    let message = await exports.broadcast(params).catch((err) => { exports.error(callback, err) });
+    callback(null, data);
+}
+
+exports.error = async (callback, err) => {
+    let params = {
+        Subject: `Snapshot and Pruning FAILED for ${prefix}`,
+        Message: err
+    }
+    let message = await exports.broadcast(params).catch((err) => { exports.error(callback, err) });
     callback(err);
+}
+
+exports.broadcast = (data) => {
+    let params = {
+        TopicArn: process.env.SNS_TOPIC_ARN,
+    }
+    return sns.publish(Object.assign(params, data)).promise();
 }
 
 exports.createClusterSnapshot = () => {
@@ -54,7 +76,7 @@ exports.pruneSnapshots = (snapshots) => {
             let oldestDate = new Date();
             let deleteSnap = false;
 
-            switch (ttlMetric) {
+            switch (ttlMetric.toLowerCase()) {
                 case 'second':
                     deleteSnap = createdDate < (oldestDate.setSeconds(oldestDate.getSeconds() - ttl))
                     break;

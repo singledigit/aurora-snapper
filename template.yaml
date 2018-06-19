@@ -1,20 +1,107 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: Automated process for keeping snapshots on aurora
+Description: Automated process for keeping manual snapshots on aurora
+
+Parameters:
+  ClusterId:
+    Type: String
+    Description: The name of the Aurora Cluster to be snapped
 
 Globals:
   Function:
     Runtime: nodejs8.10
     MemorySize: 128
     Timeout: 60
+    Environment:
+      Variables:
+        SNS_TOPIC_ARN: !Ref SNSBroadcast
+        CLUSTER_ID: !Ref ClusterId
 
 Resources:
-  snapper:
+  # SNS Topic for notifications
+  SNSBroadcast:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: AuroraSnapperBroadcast
+
+
+  # Policy to create logs if needed
+  SnapperManagedLogPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: '*'
+
+  # Policy to access RDS
+  SnapperManagedAuroraPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - rds:CreateDBClusterSnapshot
+              - rds:DeleteDBClusterSnapshot
+              - rds:DescribeDBClusterSnapshots
+            Resource: '*'
+  
+  SnapperManagedSQSPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Ref SNSBroadcast
+
+## Duplicate as needed
+  SnapperLambda30Minute:
     Type: 'AWS::Serverless::Function'
     Properties:
+      Policies:
+        - !Ref SnapperManagedLogPolicy
+        - !Ref SnapperManagedAuroraPolicy
+        - !Ref SnapperManagedSQSPolicy
       Handler: snapper/index.handler
       Events:
         CreateAuroraSnapshot:
           Type: Schedule
           Properties:
-            Schedule: rate(1 minute)
+            ## Change frequency variable # Cron syntax works as well
+            Schedule: rate(1 minute) # rate(30 minutes) | rate(1 hour) | rate(7 day)
+      Environment:
+        Variables:
+          ## ## ## ## ## Change Variables below
+          TIME_TO_LIVE: 30
+          TIME_TO_LIVE_METRIC: Minute # Second | Minute | Hour | Day | Month
+
+  SnapperLambda1Day:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Policies:
+        - !Ref SnapperManagedLogPolicy
+        - !Ref SnapperManagedAuroraPolicy
+        - !Ref SnapperManagedSQSPolicy
+      Handler: snapper/index.handler
+      Events:
+        CreateAuroraSnapshot:
+          Type: Schedule
+          Properties:
+            ## Change frequency variables
+            ## Cron syntax works as well (https://docs.aws.amazon.com/lambda/latest/dg/tutorial-scheduled-events-schedule-expressions.html)
+            Schedule: rate(10 minutes) # rate(30 minutes) | rate(1 hour) | rate(7 day)
+      Environment:
+        Variables:
+          ## ## ## ## ## Change Retention Variables below
+          TIME_TO_LIVE: 1
+          TIME_TO_LIVE_METRIC: Day # Second | Minute | Hour | Day | Month
