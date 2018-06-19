@@ -1,5 +1,4 @@
 .vscode
 .DS_Store
-local.yaml
-out.yaml
-local.yaml
+local.json
+out.yamL

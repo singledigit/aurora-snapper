@@ -1,8 +1,0 @@
-{
-  "SnapperLambda30Minute": {
-    "CLUSTER_ID": "aurora-db-cluster",
-    "SNS_TOPIC_ARN": "arn:aws:sns:us-east-1:589314110032:AuroraSnapper-SNSBroadcast-OAG26PJEG0TQ",
-    "TIME_TO_LIVE": 30,
-    "TIME_TO_LIVE_METRIC": "Minute"
-  }
-}
