@@ -13,7 +13,8 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 3. Create a unique bucket to upload the code to. `aws s3api create-bucket --bucket <your unique bucket name>`
 
 ## Update Variables
-*to be updated*
+1. Copy and rename function as many times as needed
+2. Change *Frquency*, *Time To Live*, and *Time To Live Metrics* variables
 
 ## Deployment
 Code deployment consists of two commands. The first command will package up your code and copy it to the bucket you created. The second will deploy your new lambda.
