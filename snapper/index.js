@@ -5,7 +5,6 @@ const sns = new AWS.SNS();
 const cluster = process.env.CLUSTER_ID
 const ttl = process.env.TIME_TO_LIVE;
 const ttlMetric = process.env.TIME_TO_LIVE_METRIC
-const tags = [{ Key: 'type', Value: 'snapper' }]
 const prefix = `snapper-${ttl}-${ttlMetric}-${cluster}`
 
 exports.handler = async (event) => {
@@ -53,7 +52,7 @@ exports.createClusterSnapshot = () => {
     let params = {
         DBClusterIdentifier: cluster,
         DBClusterSnapshotIdentifier: `${prefix}-${Date.now()}`,
-        Tags: tags
+        Tags: [{ Key: 'type', Value: 'snapper' }]
     }
     return rds.createDBClusterSnapshot(params).promise();
 }

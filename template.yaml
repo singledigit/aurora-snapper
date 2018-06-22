@@ -65,7 +65,7 @@ Resources:
             Resource: !Ref SNSBroadcast
 
 ## Duplicate as needed
-  SnapperLambda10Minute:
+  SnapperLambda24Hour:
     Type: 'AWS::Serverless::Function'
     Properties:
       Policies:
@@ -78,9 +78,29 @@ Resources:
           Type: Schedule
           Properties:
             ## Change frequency variable # Cron syntax works as well
-            Schedule: rate(5 minute) # rate(30 minutes) | rate(1 hour) | rate(7 day)
+            Schedule: rate(1 hour) # rate(30 minutes) | rate(1 hour) | rate(7 day)
       Environment:
         Variables:
           ## ## ## ## ## Change Variables below
-          TIME_TO_LIVE: 10
-          TIME_TO_LIVE_METRIC: Minute # Second | Minute | Hour | Day | Month
+          TIME_TO_LIVE: 24
+          TIME_TO_LIVE_METRIC: Hour # Second | Minute | Hour | Day | Month
+
+  SnapperLambda7Day:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Policies:
+        - !Ref SnapperManagedLogPolicy
+        - !Ref SnapperManagedAuroraPolicy
+        - !Ref SnapperManagedSQSPolicy
+      Handler: snapper/index.handler
+      Events:
+        CreateAuroraSnapshot:
+          Type: Schedule
+          Properties:
+            ## Change frequency variable # Cron syntax works as well
+            Schedule: rate(1 day) # rate(30 minutes) | rate(1 hour) | rate(7 day)
+      Environment:
+        Variables:
+          ## ## ## ## ## Change Variables below
+          TIME_TO_LIVE: 7
+          TIME_TO_LIVE_METRIC: Day # Second | Minute | Hour | Day | Month
