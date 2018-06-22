@@ -5,7 +5,6 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 ## Pre-Requisites
 1. An AWS account with admin access rights.
 2. AWS CLI installed and configured. Instructions can be found [here](https://docs.aws.amazon.com/cli/latest/userguide/installing.html).
-3. Node 8+ to test locally but not required
 
 ## Setup
 1. Clone this repo locally `git clone https://github.com/singledigit/aurora-snapper`
