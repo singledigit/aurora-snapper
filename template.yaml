@@ -84,6 +84,7 @@ Resources:
           ## ## ## ## ## Change Variables below
           TIME_TO_LIVE: 24
           TIME_TO_LIVE_METRIC: Hour # Second | Minute | Hour | Day | Month
+          BROADCAST_ON_SUCCESS: false
 
   SnapperLambda7Day:
     Type: 'AWS::Serverless::Function'
@@ -104,3 +105,4 @@ Resources:
           ## ## ## ## ## Change Variables below
           TIME_TO_LIVE: 7
           TIME_TO_LIVE_METRIC: Day # Second | Minute | Hour | Day | Month
+          BROADCAST_ON_SUCCESS: true

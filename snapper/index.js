@@ -1,43 +1,33 @@
 const AWS = require('aws-sdk');
 const rds = new AWS.RDS();
 const sns = new AWS.SNS();
+const prefix = `snapper-${process.env.TIME_TO_LIVE}-${process.env.TIME_TO_LIVE_METRIC}-${process.env.CLUSTER_ID}`
 
-const cluster = process.env.CLUSTER_ID
-const ttl = process.env.TIME_TO_LIVE;
-const ttlMetric = process.env.TIME_TO_LIVE_METRIC
-const prefix = `snapper-${ttl}-${ttlMetric}-${cluster}`
+const createClusterSnapshot = () => {
+    let params = {
+        DBClusterIdentifier: process.env.CLUSTER_ID,
+        DBClusterSnapshotIdentifier: `${prefix}-${Date.now()}`,
+        Tags: [{ Key: 'type', Value: 'snapper' }]
+    }
+    return rds.createDBClusterSnapshot(params).promise();
+}
 
-exports.handler = async (event) => {
-
-    // create new snapshot
-    var newSnapshot = await exports.createClusterSnapshot().catch((err) => { exports.error(err) });
-
-    // grab current list of snapshots
-    let snapshots = await exports.getSnapshots().catch((err) => { exports.error(err) });
-
-    // create a list of prune requests
-    let pruneRequests = exports.pruneSnapshots(snapshots.DBClusterSnapshots);
-
-    // delete snapshots according to criteria
-    let deletedSnaps = await Promise.all(pruneRequests).catch((err) => { exports.error(err) });
-
-    // success
-    return exports.success({ "New-Snapshot": newSnapshot, "DeletedSnapshots": deletedSnaps });
-};
-
-exports.success = (data) => {
+const success = (data) => {
     console.log(`Snapshot and Pruning COMPLETED for ${prefix}`);
     console.log(data);
 
-    let snsParams = {
-        Subject: `Snapshot and Pruning COMPLETED for ${prefix}`,
-        Message: JSON.stringify(data),
-        TopicArn: process.env.SNS_TOPIC_ARN
+    if (process.env.BRODCAST_ON_SUCCESS) {
+        let snsParams = {
+            Subject: `Snapshot and Pruning COMPLETED for ${prefix}`,
+            Message: JSON.stringify(data),
+            TopicArn: process.env.SNS_TOPIC_ARN
+        }
+        return sns.publish(snsParams).promise()
     }
-    return sns.publish(snsParams).promise()
+    else return Promise.resolve(data)
 }
 
-exports.error = (err) => {
+const errorHandler = (err) => {
     console.log(`Snapshot and Pruning FAILED for ${prefix}`);
     console.log(err);
 
@@ -48,55 +38,62 @@ exports.error = (err) => {
     return sns.publish(snsParams).promise()
 }
 
-exports.createClusterSnapshot = () => {
+const getSnapshots = () => {
     let params = {
-        DBClusterIdentifier: cluster,
-        DBClusterSnapshotIdentifier: `${prefix}-${Date.now()}`,
-        Tags: [{ Key: 'type', Value: 'snapper' }]
-    }
-    return rds.createDBClusterSnapshot(params).promise();
-}
-
-exports.getSnapshots = () => {
-    let params = {
-        DBClusterIdentifier: cluster,
+        DBClusterIdentifier: process.env.CLUSTER_ID,
         SnapshotType: 'manual'
     }
     return rds.describeDBClusterSnapshots(params).promise();
 }
 
-exports.pruneSnapshots = (snapshots) => {
-    let prunedSnapShots = []
-    snapshots.forEach(snap => {
+const pruneSnapshots = (snapshots) => {
+    return snapshots.map(snap => {
         if (snap.DBClusterSnapshotIdentifier.toLowerCase().startsWith(prefix.toLowerCase())) {
             let createdDate = new Date(snap.SnapshotCreateTime);
             let oldestDate = new Date();
             let deleteSnap = false;
 
-            switch (ttlMetric.toLowerCase()) {
+            switch (process.env.TIME_TO_LIVE_METRIC.toLowerCase()) {
                 case 'second':
-                    deleteSnap = createdDate < (oldestDate.setSeconds(oldestDate.getSeconds() - ttl))
+                    deleteSnap = createdDate < (oldestDate.setSeconds(oldestDate.getSeconds() - process.env.TIME_TO_LIVE))
                     break;
                 case 'minute':
-                    deleteSnap = createdDate < (oldestDate.setMinutes(oldestDate.getMinutes() - ttl))
+                    deleteSnap = createdDate < (oldestDate.setMinutes(oldestDate.getMinutes() - process.env.TIME_TO_LIVE))
                     break;
                 case 'hour':
-                    deleteSnap = createdDate < (oldestDate.setHours(oldestDate.getHours() - ttl))
+                    deleteSnap = createdDate < (oldestDate.setHours(oldestDate.getHours() - process.env.TIME_TO_LIVE))
                     break;
                 case 'day':
-                    deleteSnap = ((Date.now() - createdDate) / (1000 * 60 * 60 * 24)) > ttl
+                    deleteSnap = ((Date.now() - createdDate) / (1000 * 60 * 60 * 24)) > process.env.TIME_TO_LIVE
                     break;
                 default:
                     deleteSnap = false;
                     break;
             }
 
-            if (deleteSnap) prunedSnapShots.push(exports.deleteSnapshot(snap.DBClusterSnapshotIdentifier))
+            if (deleteSnap) return rds.deleteDBClusterSnapshot({ DBClusterSnapshotIdentifier: snap.DBClusterSnapshotIdentifier }).promise()
         }
     })
-    return prunedSnapShots
 }
 
-exports.deleteSnapshot = (snapshotID) => {
-    return rds.deleteDBClusterSnapshot({ DBClusterSnapshotIdentifier: snapshotID }).promise();
-}
+exports.handler = async () => {
+    try {
+        // create new snapshot
+        let newSnapshot = await createClusterSnapshot();
+
+        // grab current list of snapshots
+        let snapshots = await getSnapshots();
+
+        // create a list of prune requests
+        let pruneRequests = pruneSnapshots(snapshots.DBClusterSnapshots);
+
+        // delete snapshots according to criteria
+        let deletedSnaps = await Promise.all(pruneRequests)
+
+        // success
+        return success({ "New-Snapshot": newSnapshot, "DeletedSnapshots": deletedSnaps });
+    }
+    catch (err) {
+        errorHandler(err);
+    }
+};
