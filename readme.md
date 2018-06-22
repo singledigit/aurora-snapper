@@ -41,7 +41,7 @@ aws cloudformation deploy --template-file ./out.yaml --stack-name AuroraSnapper 
 ```
 aws cloudformation describe-stacks --stack-name AuroraSnapper --query 'Stacks[0].Outputs[?OutputKey==`BroadcastTopicArn`].OutputValue' --output text
 ```
-2. Make not of the returned Topic Arn. Something like: *arn:aws:sns:us-east-1:1122334455:AuroraSnapper-SNSBroadcast-111111111*
+2. Make note of the returned Topic Arn. Something like: *arn:aws:sns:us-east-1:1122334455:AuroraSnapper-SNSBroadcast-111111111*
 3. Use following commands to subscribe to broadcast messaging
 
 **Email**
