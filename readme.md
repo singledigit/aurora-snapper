@@ -9,7 +9,10 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 ## Setup
 1. Clone this repo locally `git clone https://github.com/singledigit/aurora-snapper`
 2. Change to the downloaded directory and install dependencies using `npm install`
-3. Create a unique bucket to upload the code to. `aws s3api create-bucket --bucket <your unique bucket name>`
+3. Create a unique bucket to upload the code to.
+```
+aws s3api create-bucket --bucket <your unique bucket name>
+```
 
 ## Update Variables
 1. Copy and rename function as many times as needed
