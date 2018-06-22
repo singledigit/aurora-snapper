@@ -106,3 +106,8 @@ Resources:
           TIME_TO_LIVE: 7
           TIME_TO_LIVE_METRIC: Day # Second | Minute | Hour | Day | Month
           BROADCAST_ON_SUCCESS: true
+
+Outputs:
+  BroadcastTopicArn:
+    Description: 'SNS Topic Arn for subscriptions for notifications'
+    Value: !Ref SNSBroadcast
