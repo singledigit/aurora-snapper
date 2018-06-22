@@ -8,47 +8,45 @@ const ttlMetric = process.env.TIME_TO_LIVE_METRIC
 const tags = [{ Key: 'type', Value: 'snapper' }]
 const prefix = `snapper-${ttl}-${ttlMetric}-${cluster}`
 
-exports.handler = async (event, context, callback) => {
+exports.handler = async (event) => {
 
     // create new snapshot
-    var newSnapshot = await exports.createClusterSnapshot().catch((err) => { exports.error(callback, err) });
+    var newSnapshot = await exports.createClusterSnapshot().catch((err) => { exports.error(err) });
 
     // grab current list of snapshots
-    let snapshots = await exports.getSnapshots().catch((err) => { exports.error(callback, err) });
+    let snapshots = await exports.getSnapshots().catch((err) => { exports.error(err) });
 
     // create a list of prune requests
     let pruneRequests = exports.pruneSnapshots(snapshots.DBClusterSnapshots);
 
     // delete snapshots according to criteria
-    let deletedSnaps = await Promise.all(pruneRequests).catch((err) => { exports.error(callback, err) });
+    let deletedSnaps = await Promise.all(pruneRequests).catch((err) => { exports.error(err) });
 
     // success
-    exports.success(callback, { "New-Snapshot": newSnapshot, "DeletedSnapshots": deletedSnaps });
+    return exports.success({ "New-Snapshot": newSnapshot, "DeletedSnapshots": deletedSnaps });
 };
 
-exports.success = async (callback, data) => {
-    let params = {
-        Subject: `Snapshot and Pruning Complete for ${prefix}`,
-        Message: data
+exports.success = (data) => {
+    console.log(`Snapshot and Pruning COMPLETED for ${prefix}`);
+    console.log(data);
+
+    let snsParams = {
+        Subject: `Snapshot and Pruning COMPLETED for ${prefix}`,
+        Message: JSON.stringify(data),
+        TopicArn: process.env.SNS_TOPIC_ARN
     }
-    let message = await exports.broadcast(params).catch((err) => { exports.error(callback, err) });
-    callback(null, data);
+    return sns.publish(snsParams).promise()
 }
 
-exports.error = async (callback, err) => {
-    let params = {
+exports.error = (err) => {
+    console.log(`Snapshot and Pruning FAILED for ${prefix}`);
+    console.log(err);
+
+    let snsParams = {
         Subject: `Snapshot and Pruning FAILED for ${prefix}`,
-        Message: err
+        Message: JSON.stringify(err)
     }
-    let message = await exports.broadcast(params).catch((err) => { exports.error(callback, err) });
-    callback(err);
-}
-
-exports.broadcast = (data) => {
-    let params = {
-        TopicArn: process.env.SNS_TOPIC_ARN,
-    }
-    return sns.publish(Object.assign(params, data)).promise();
+    return sns.publish(snsParams).promise()
 }
 
 exports.createClusterSnapshot = () => {
@@ -71,7 +69,7 @@ exports.getSnapshots = () => {
 exports.pruneSnapshots = (snapshots) => {
     let prunedSnapShots = []
     snapshots.forEach(snap => {
-        if (snap.DBClusterSnapshotIdentifier.startsWith(prefix)) {
+        if (snap.DBClusterSnapshotIdentifier.toLowerCase().startsWith(prefix.toLowerCase())) {
             let createdDate = new Date(snap.SnapshotCreateTime);
             let oldestDate = new Date();
             let deleteSnap = false;
