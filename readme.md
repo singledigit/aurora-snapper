@@ -7,8 +7,14 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 2. AWS CLI installed and configured. Instructions can be found [here](https://docs.aws.amazon.com/cli/latest/userguide/installing.html).
 
 ## Setup
-1. Clone this repo locally `git clone https://github.com/singledigit/aurora-snapper`
-2. Change to the downloaded directory and install dependencies using `npm install`
+1. Clone this repo locally
+```
+git clone https://github.com/singledigit/aurora-snapper
+```
+2. Change to the downloaded directory and install dependencies using
+```
+npm install
+```
 3. Create a unique bucket to upload the code to.
 ```
 aws s3api create-bucket --bucket <your unique bucket name>
