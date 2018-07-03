@@ -1,0 +1,25 @@
+{
+  "name": "aurorasnapper",
+  "version": "1.0.0",
+  "description": "Automation of manual aurora cluster snapshots",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/singledigit/aurora-snapper.git"
+  },
+  "keywords": [
+    "aws",
+    "aurora",
+    "snapshots",
+    "automation"
+  ],
+  "author": "Eric Johnson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/singledigit/aurora-snapper/issues"
+  },
+  "homepage": "https://github.com/singledigit/aurora-snapper#readme"
+}
