@@ -2,6 +2,8 @@
 
 This is a simple peice of code to help automate manual snapshots on Aurora. These snapshots can be saved beyond the standard 35 day window.
 
+**Github:** https://github.com/singledigit/aurora-snapper
+
 ## Pre-Requisites
 1. An AWS account with admin access rights.
 2. AWS CLI installed and configured. Instructions can be found [here](https://docs.aws.amazon.com/cli/latest/userguide/installing.html).
