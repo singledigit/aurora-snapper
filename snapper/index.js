@@ -87,7 +87,7 @@ exports.handler = async () => {
         // create a list of prune requests
         let pruneRequests = pruneSnapshots(snapshots.DBClusterSnapshots);
 
-        // delete snapshots according to criteria
+        // delete snapshots according to TTL criteria
         let deletedSnaps = await Promise.all(pruneRequests)
 
         // success
