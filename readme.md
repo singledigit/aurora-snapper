@@ -8,7 +8,8 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 2. AWS CLI installed and configured. Instructions can be found [here](https://docs.aws.amazon.com/cli/latest/userguide/installing.html).
 
 ## Setup
-1. Create a unique bucket to upload the code to.
+1. If pulling from github, clone this repo and `cd` to cloned directory
+2. Create a unique bucket to upload the code to.
 ```
 aws s3api create-bucket --bucket <your unique bucket name>
 ```
