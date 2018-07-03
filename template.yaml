@@ -64,7 +64,9 @@ Resources:
               - sns:Publish
             Resource: !Ref SNSBroadcast
 
-## Duplicate as needed
+#########################
+## Duplicate as needed ##
+#########################
   SnapperLambda24Hour:
     Type: 'AWS::Serverless::Function'
     Properties:

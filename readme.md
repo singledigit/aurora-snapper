@@ -22,7 +22,7 @@ Code deployment consists of two commands. The first command will package up your
 
 1. **Package:**
 ```
-aws cloudformation package --template-file ./template.yaml --s3-bucket <your unique bucket name>
+aws cloudformation package --template-file ./template.yaml --s3-bucket <your unique bucket name> --output-template-file ./out.yaml
 ```
 2. **Deploy:**
 ```
@@ -46,3 +46,16 @@ aws sns subscribe --topic-arn <Your Topic Arn> --protocol email --notification-e
 ```
 aws sns subscribe --topic-arn <Your Topic Arn> --protocol sms --notification-endpoint <Your Phone Number. Format: +15554441515>
 ```
+
+## Cleanup ##
+To delete AuroraSnapper run the following command.
+```
+aws cloudformation delete-stack --stack-name AuroraSnapper
+```
+
+## Note After Cleanup ##
+* Snapshots must be manually pruned.
+* Bucket must me manually deleted
+
+## Disclaimer ##
+**Rackspace nor the author is not responsible for any loss of data or charges incurred while using this utility.**
