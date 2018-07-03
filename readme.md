@@ -23,7 +23,7 @@ Code deployment consists of two commands. The first command will package up your
 
 1. **Package:**
 ```
-aws cloudformation package --template-file ./template.yaml --s3-bucket <your unique bucket name> --output-template-file ./out.yaml
+aws cloudformation package --template-file ./template.yaml --output-template-file ./out.yaml --s3-bucket <your unique bucket name>
 ```
 2. **Deploy:**
 ```
