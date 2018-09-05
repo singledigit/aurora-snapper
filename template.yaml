@@ -6,6 +6,22 @@ Parameters:
   ClusterId:
     Type: String
     Description: The name of the Aurora Cluster to be snapped
+  Chron:
+    Type: String
+    Description: Chron schedule
+    Default: rate(7 days)
+  TTLMetric:
+    Type: String
+    Description: Unit for time to live [Ex -> Second | Minute | Hour | Day | Month]
+    Default: Month
+  TTL:
+    Type: Number
+    Description: Number of units for TTL
+    Default: 12
+  BrodcastOnSuccess:
+    Type: String
+    Description: Broadcast to SNS Topic on successful snapshots
+    Default: false
 
 Globals:
   Function:
@@ -79,14 +95,12 @@ Resources:
         CreateAuroraSnapshot:
           Type: Schedule
           Properties:
-            ## Change frequency variable # Cron syntax works as well
-            Schedule: rate(1 hour) # [Ex: rate(30 minutes) | rate(1 hour) | rate(7 day)]
+            Schedule: !Ref Chron
       Environment:
         Variables:
-          ## ## ## ## ## Change Variables below
-          TIME_TO_LIVE: 24 # how many : [int]
-          TIME_TO_LIVE_METRIC: Hour # What kind [Second | Minute | Hour | Day | Month]
-          BROADCAST_ON_SUCCESS: false # Broadcast success? [true | false]
+          TIME_TO_LIVE: !Ref TTL
+          TIME_TO_LIVE_METRIC: !Ref TTLMetric
+          BROADCAST_ON_SUCCESS: !Ref BrodcastOnSuccess
 
 Outputs:
   BroadcastTopicArn:

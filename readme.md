@@ -14,9 +14,12 @@ This is a simple peice of code to help automate manual snapshots on Aurora. Thes
 aws s3api create-bucket --bucket <your unique bucket name>
 ```
 
-## Update Variables
-1. In the `template.yaml` file, copy and rename function as many times as needed
-2. Change *Frquency*, *Time To Live*, and *Time To Live Metrics* variables
+## Parameters
+- **ClusterId**: The ID of the Aurora cluster to be snapped
+- **Chron**: Chron string to set how oftenthe snapshot should be taken. The default is every 7 days. Examples: *rate(30 minutes) | rate(1 hour) | rate(7 days)] Default is rate(7 days)*
+- **TTLMetric**: The metric to use when setting your Time To Live (TTL). The default is Month. Examples: *Second | Minute | Hour | Day | Month*
+- **TTL**: Number of TTYL units. The default is 12. This plus TTLMetric would be a default of 12 months for saving the snapshots
+- **BrodcastOnSuccess**: Whether to broadcast to SNS topic on success or not. The dafault is false
 
 ## Deployment
 Code deployment consists of two commands. The first command will package up your code and copy it to the bucket you created. The second will deploy your new lambda.
@@ -27,7 +30,7 @@ aws cloudformation package --template-file ./template.yaml --output-template-fil
 ```
 2. **Deploy:**
 ```
-aws cloudformation deploy --template-file ./out.yaml --stack-name AuroraSnapper --capabilities CAPABILITY_IAM --parameter-overrides ClusterId=<Your DB Cluster Name>
+aws cloudformation deploy --template-file ./out.yaml --stack-name AuroraSnapper --capabilities CAPABILITY_IAM --parameter-overrides ClusterId=<Your DB Cluster Name> <any other overrides>
 ```
 
 ## Post Deployment
@@ -59,4 +62,4 @@ aws cloudformation delete-stack --stack-name AuroraSnapper
 * Bucket must me manually deleted
 
 ## Disclaimer ##
-**Rackspace nor the author is not responsible for any loss of data or charges incurred while using this utility.**
+**The author is not responsible for any loss of data or charges incurred while using this utility.**
