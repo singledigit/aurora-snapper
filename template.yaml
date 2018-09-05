@@ -40,56 +40,28 @@ Resources:
     Properties:
       DisplayName: AuroraSnapperBroadcast
 
-
-  # Policy to create logs if needed
-  SnapperManagedLogPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Resource: '*'
-
-  # Policy to access RDS
-  SnapperManagedAuroraPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - rds:CreateDBClusterSnapshot
-              - rds:DeleteDBClusterSnapshot
-              - rds:DescribeDBClusterSnapshots
-            Resource: '*'
-  
-  SnapperManagedSQSPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - sns:Publish
-            Resource: !Ref SNSBroadcast
-
-#########################
-## Duplicate as needed ##
-#########################
-  SnapperLambda24Hour:
+  SnapperLambda:
     Type: 'AWS::Serverless::Function'
     Properties:
       Policies:
-        - !Ref SnapperManagedLogPolicy
-        - !Ref SnapperManagedAuroraPolicy
-        - !Ref SnapperManagedSQSPolicy
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - rds:CreateDBClusterSnapshot
+                - rds:DeleteDBClusterSnapshot
+                - rds:DescribeDBClusterSnapshots
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: !Ref SNSBroadcast
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
       Handler: snapper/index.handler
       Events:
         CreateAuroraSnapshot:
